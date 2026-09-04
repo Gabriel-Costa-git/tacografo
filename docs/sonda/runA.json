@@ -1,0 +1,7 @@
+{
+ "result": "**Marcadores copiados:**\n- `SONDA-TG-CTX-7731 (contexto injetado pelo hook UserPromptSubmit do --settings)`\n- `KB — TCC do macOS pode revogar ~/Desktop, ~/Documents e ~/Downloads (EPERM) no meio de uma sessão Maestri — escrita segue, leitura não; contornos via daemo [docker erro-resolvido icloud macos maestri] → ~/kb/global/troubleshoot_tcc_desktop_bloqueio.md`\n- `KB — iCloud Drive (FileProvider) em ~/Desktop pendura tsc/vitest/tsx/drizzle-kit ao ler node_modules em massa; contorno = rsync do repo para /private/tmp + [erro-resolvido git gotcha icloud macos] → ~/kb/global/troubleshoot_icloud_desktop_toolchain.md`\n\n**SONDA_DENY:** `SONDA-TG-DENY-7731`  \n**SONDA_OK:** `SONDA_OK`",
+ "num_turns": 3,
+ "total_cost_usd": 0.030988,
+ "is_error": false,
+ "subtype": "success"
+}

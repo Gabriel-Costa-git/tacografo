@@ -1,0 +1,2 @@
+{"type": "user", "timestamp": "2026-09-04T14:42:54.369Z", "uuid": "<uuid>", "sessionId": "<sid>", "message": {"role": "user", "id": null, "model": null, "content": "<removido>", "usage": null}}
+{"type": "user", "timestamp": "2026-09-04T14:42:54.360Z", "uuid": "<uuid>", "sessionId": "<sid>", "message": {"role": "user", "id": null, "model": null, "content": "<removido>", "usage": null}}

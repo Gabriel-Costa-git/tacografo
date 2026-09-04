@@ -1,0 +1,66 @@
+{
+ "permissions": {
+  "deny": [
+   "Bash(git commit:*)",
+   "Bash(git push:*)"
+  ]
+ },
+ "hooks": {
+  "SessionStart": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "/opt/homebrew/bin/python3 /private/tmp/claude-501/-private-tmp-claude-501--Users-gabriel-9ea7e425-c964-46fa-824f-267ff5661c8b-scratchpad-peca-stack--maestri-roles-9a436f62-1e9f-4731-9eeb-7d94928ea9ab/bec2545f-d206-4c15-b54b-88bf6be710b0/scratchpad/sonda/hook.py session_start",
+      "timeout": 5
+     }
+    ]
+   }
+  ],
+  "UserPromptSubmit": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "/opt/homebrew/bin/python3 /private/tmp/claude-501/-private-tmp-claude-501--Users-gabriel-9ea7e425-c964-46fa-824f-267ff5661c8b-scratchpad-peca-stack--maestri-roles-9a436f62-1e9f-4731-9eeb-7d94928ea9ab/bec2545f-d206-4c15-b54b-88bf6be710b0/scratchpad/sonda/hook.py prompt",
+      "timeout": 5
+     }
+    ]
+   }
+  ],
+  "PreToolUse": [
+   {
+    "matcher": "Bash",
+    "hooks": [
+     {
+      "type": "command",
+      "command": "/opt/homebrew/bin/python3 /private/tmp/claude-501/-private-tmp-claude-501--Users-gabriel-9ea7e425-c964-46fa-824f-267ff5661c8b-scratchpad-peca-stack--maestri-roles-9a436f62-1e9f-4731-9eeb-7d94928ea9ab/bec2545f-d206-4c15-b54b-88bf6be710b0/scratchpad/sonda/hook.py pre_bash",
+      "timeout": 5
+     }
+    ]
+   }
+  ],
+  "Stop": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "/opt/homebrew/bin/python3 /private/tmp/claude-501/-private-tmp-claude-501--Users-gabriel-9ea7e425-c964-46fa-824f-267ff5661c8b-scratchpad-peca-stack--maestri-roles-9a436f62-1e9f-4731-9eeb-7d94928ea9ab/bec2545f-d206-4c15-b54b-88bf6be710b0/scratchpad/sonda/hook.py stop",
+      "timeout": 10
+     }
+    ]
+   }
+  ],
+  "SessionEnd": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "/opt/homebrew/bin/python3 /private/tmp/claude-501/-private-tmp-claude-501--Users-gabriel-9ea7e425-c964-46fa-824f-267ff5661c8b-scratchpad-peca-stack--maestri-roles-9a436f62-1e9f-4731-9eeb-7d94928ea9ab/bec2545f-d206-4c15-b54b-88bf6be710b0/scratchpad/sonda/hook.py session_end",
+      "timeout": 5
+     }
+    ]
+   }
+  ]
+ }
+}

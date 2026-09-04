@@ -1,0 +1,149 @@
+{
+  "raiz": "tacografo",
+  "nos": [
+    {
+      "id": "tacografo",
+      "pai": "raiz",
+      "nome": "Tacógrafo",
+      "funcao": "Livro-razão, freio e status da orquestração: um evento por sessão, turno, task, gate e ask-back; teto por frente que bloqueia; estado derivado em 1 leitura",
+      "tecnologia": "python3 stdlib · JSONL · hooks",
+      "roda_em": "Mac · ~/tacografo (git)",
+      "porque": "92% dos 3.339 USD do fio principal do maestro foram gastos em turnos acima de 150k e o incidente de 130 USD/45 min não tinha freio; só evento por turno e número na mão governam isso, sem daemon"
+    },
+    {
+      "id": "sonda-hooks",
+      "pai": "tacografo",
+      "nome": "Sonda: hooks do recruta",
+      "funcao": "5 hooks entregues por --settings ~/tacografo/settings/recruta.json (deny atual + hooks): SessionStart, UserPromptSubmit, PreToolUse(Bash), Stop, SessionEnd → tg hook <evento> (timeout 5 s; Stop 10 s), lendo o stdin JSON e o ambiente (CLAUDE_CODE_SESSION_ID, CLAUDE_EFFORT, CLAUDE_CONFIG_DIR, MAESTRI_TERMINAL_ID, TG_*); fail-open; kill switch ~/tacografo/.off ou TG_HOOKS=0; sem subprocess",
+      "tecnologia": "5 hooks via --settings",
+      "roda_em": "processo claude do recruta",
+      "porque": "O evento nasce onde acontece; 30–60 ms e 15 MB por disparo, zero tokens; kb.py já prova o mecanismo nas 2 contas e Stop via --settings foi provado no T8"
+    },
+    {
+      "id": "hook-prompt-freio",
+      "pai": "sonda-hooks",
+      "nome": "hook prompt (freio)",
+      "funcao": "Extrai a task do envelope [MAESTRO/<frente>/T-n], classifica a posição do envelope (início / colado a resíduo / ausente), grava evento prompt sem o texto; se frentes/<f>/FREIO existir responde {\"decision\":\"block\",\"reason\":...}",
+      "tecnologia": "UserPromptSubmit · block",
+      "roda_em": "recruta",
+      "porque": "É o único ponto que barra uma task nova antes de ela custar; slash commands e prompts sem envelope passam, para o maestro poder mandar parar"
+    },
+    {
+      "id": "hook-pre-bash",
+      "pai": "sonda-hooks",
+      "nome": "hook pre_bash (guarda)",
+      "funcao": "Nega maestri ask \"<maestro>\" \"[T-n] pronto...\" quando não há evento gate com exit 0 para T-n (e sem reporte, F3); a 120% do teto nega todo comando Bash (freio duro); sai em 30 ms se o comando não casa",
+      "tecnologia": "PreToolUse Bash · deny",
+      "roda_em": "recruta",
+      "porque": "Regras 6 e 7 do guardrails viram gate mecânico (o recruta já tentou 'concluir' com gate vermelho); task em voo para no próximo comando quando o teto estoura"
+    },
+    {
+      "id": "hook-stop-custo",
+      "pai": "sonda-hooks",
+      "nome": "hook stop (custo/alerta)",
+      "funcao": "Lê o transcript a partir do offset salvo, dedupe por message.id, grava stop (contexto do turno, USD do turno e da sessão, modelo, duração), atualiza frentes/<f>/custo.json com flock, emite alerta a 70% e cria FREIO a 100%",
+      "tecnologia": "Stop · offsets · flock",
+      "roda_em": "recruta",
+      "porque": "Custo incremental sem ccusage (superconta ~26% e não está no PATH); só os 5–50 KB novos do transcript são lidos por turno"
+    },
+    {
+      "id": "ledger",
+      "pai": "tacografo",
+      "nome": "Livro-razão (ledger)",
+      "funcao": "ledger/eventos-AAAA-MM.jsonl com eventos recruit, session_start, prompt, stop, gate, askback, alerta, freio, liberar, go, largada, encerrar, session_end; ledger/sessoes.jsonl (sessões-maestro); ledger/offsets/<sid>.json (offset em bytes + últimos 50 message.id); 1 os.write por linha (< 4 KB); rotação mensal",
+      "tecnologia": "JSONL append-only, O_APPEND",
+      "roda_em": "Mac · ~/tacografo/ledger",
+      "porque": "10 processos × 2.000 linhas = 20.000 válidas, 0 corrompidas em APFS; Monitor e tail -F leem por linha; grep e git funcionam; regenerável dos transcripts"
+    },
+    {
+      "id": "cli-tg",
+      "pai": "tacografo",
+      "nome": "CLI tg",
+      "funcao": "Comando único do maestro e do recruta: recrutar, status, esperar, gate, pronto, freio, cota, custo, largada/encerrar, brief, sync, reconstruir, doctor, selftest, autoteste, limpar, hook; saída em texto ≤ 1,2 KB; subprocess só fora dos hooks",
+      "tecnologia": "python3 stdlib, 1 arquivo",
+      "roda_em": "terminal maestro e recruta",
+      "porque": "1 chamada e 1 linha no contexto do maestro onde hoje entram 4–6 chamadas com tela; verificação mecânica fica na ferramenta, não no contexto mais caro"
+    },
+    {
+      "id": "tg-recrutar",
+      "pai": "cli-tg",
+      "nome": "tg recrutar",
+      "funcao": "Monta o comando canônico com env TG_FRENTE/TG_NOME/TG_MODELO, roda maestri recruit, lê a tela, navega o trust dialog (--raw \"\\e[B\" + --raw \"\\n\"), espera o evento session_start (≤ 30 s) e imprime 1 linha (nome, modelo/effort, conta, sid, cwd); recusa o 5º recruta ou effort > effort_max sem --go \"<texto>\"; --effort obrigatório; --strict-mcp-config por padrão (--mcp desliga)",
+      "tecnologia": "python + maestri CLI",
+      "roda_em": "terminal do maestro",
+      "porque": "§3 tem 4 verificações manuais (trust, conta por ps -Eww, 1º ask, session-id por .jsonl) e o effort herdado da conta pôs 10 recrutas em xhigh"
+    },
+    {
+      "id": "tg-status",
+      "pai": "cli-tg",
+      "nome": "tg status",
+      "funcao": "Por recruta: modelo/effort/conta, ocupado/ocioso desde, task atual, último gate, último ask-back, USD; totais vs teto, freio, cota 5h/7d, contexto do maestro com aviso > 150k; --nota espelha em status-<frente>; --telas devolve só flags (dialog, rate-limit, texto preso); --historico",
+      "tecnologia": "python · ledger do mês",
+      "roda_em": "terminal do maestro",
+      "porque": "estado-<frente>.md foi gravado 4 vezes em 43 sessões e o maestro lê reportes, telas e arquivos (Read + cat = 45% dos seus bytes) para saber onde está"
+    },
+    {
+      "id": "tg-gate",
+      "pai": "cli-tg",
+      "nome": "tg gate",
+      "funcao": "tg gate T-n -- <comando> executa o gate do brief e grava exit, duração, log (cap 200 KB, com redação de segredos), git diff --stat, patch em frentes/<f>/patches/ (cap 1 MB, sem .env*), commit e flag dirty, arquivos fora do escopo declarado; --manual \"<motivo>\" para gate humano",
+      "tecnologia": "python + git (comando)",
+      "roda_em": "recruta",
+      "porque": "Evidência de verificação era prosa no reporte e gate verde não prova fiação (19/08); o Auditor lê o patch por caminho e o maestro só o stat"
+    },
+    {
+      "id": "tg-esperar",
+      "pai": "cli-tg",
+      "nome": "tg esperar",
+      "funcao": "tg esperar <frente> [--nome N] [--evento askback|stop|gate] [--timeout 1800] observa o ledger local (stat a cada 2 s) e termina quando o evento chega, imprimindo a linha",
+      "tecnologia": "python · stat 2 s / Monitor",
+      "roda_em": "Bash background do maestro",
+      "porque": "Troca turnos de conferência (while maestri check | grep) por uma notificação que custa zero tokens; ask com idle falso deixa de importar"
+    },
+    {
+      "id": "orcamento-freio",
+      "pai": "tacografo",
+      "nome": "Orçamento e freio",
+      "funcao": "frentes/<f>/orcamento.json {teto_usd 40, alerta_pct 70, teto_recrutas 4, effort_max high, cota_5h_freio_pct 90, freio_duro_pct 120}; arquivo FREIO; tg freio --liberar --teto --go registra o GO como evento; tg cota lê 5h/7d por conta no endpoint OAuth do CLI (token só em memória, cache 120 s)",
+      "tecnologia": "JSON + sentinela FREIO",
+      "roda_em": "Mac · frentes/<f>/",
+      "porque": "O incidente de 130 USD só parou porque o Gabriel viu; a regra 'custo/hora + GO antes de >4 produtores' deixa de depender de memória e vira arquivo e evento"
+    },
+    {
+      "id": "precos",
+      "pai": "tacografo",
+      "nome": "Tabela de preços",
+      "funcao": "precos.json com USD/MTok por modelo (input, output, cache write 1,25×, cache read 0,1×; Fable 5.1 read 0,25) e data da fonte; tg precos imprime e alerta > 90 dias; tg custo --tokens mostra só tokens",
+      "tecnologia": "precos.json editável",
+      "roda_em": "Mac",
+      "porque": "Frear é decisão relativa ao teto; ±20% de erro no preço não muda a decisão, mas USD é a linguagem do Gabriel"
+    },
+    {
+      "id": "cofre-servidor",
+      "pai": "tacografo",
+      "nome": "Cofre no servidor",
+      "funcao": "tg sync faz commit e git push servidor de ~/tacografo e ~/kb para bare repos ~/git/tacografo.git e ~/git/kb.git; tg sync --init cria os bare por SSH; falha aberta se o servidor estiver fora",
+      "tecnologia": "git push · alias servidor",
+      "roda_em": "Debian 13 (bare repos)",
+      "porque": "~/kb não tem remote e o ledger nasce no Mac; o servidor não tem no-break nem IP fixo, então é cofre, não fonte (alias resolve LAN e cai para Tailscale/SOCKS)"
+    },
+    {
+      "id": "autoteste",
+      "pai": "tacografo",
+      "nome": "Autoteste",
+      "funcao": "tg doctor (instalação, eventos recentes, disco; sem modelo); tg selftest (parser com transcript-amostra, concorrência 10×2000, block/deny em entradas sintéticas); tg autoteste --conta empresa|pessoal|ambas lança um claude real por pty.fork() com env sem variáveis CLAUDE* (filho de sessão não grava transcript) e o --settings real: 5 eventos no ledger, block por FREIO, deny de pronto e de commit, Agent/Workflow ausentes",
+      "tecnologia": "python · pty · claude -p",
+      "roda_em": "Mac (2 contas)",
+      "porque": "§10 exige 15 testes à mão a cada upgrade e duas flags não constam do --help; um upgrade pode desligar a sonda em silêncio"
+    },
+    {
+      "id": "governanca-contexto",
+      "pai": "tacografo",
+      "nome": "Governança de contexto",
+      "funcao": "Hook Stop da conta (F2, com GO) grava o turno de qualquer sessão e injeta additionalContext 'TG: contexto 312k > 150k — grave o estado e rode /compact <foco>' a 150k e 300k; opcional F4 (desligado): bloquear prompt do maestro acima de 400k; idempotente por message.id",
+      "tecnologia": "hook Stop da conta (F2)",
+      "roda_em": "sessões do maestro",
+      "porque": "84% dos turnos do maestro acima de 150k = 92% do gasto; autoCompactEnabled false na conta pessoal; §8 manda compactar e ninguém mede"
+    }
+  ]
+}

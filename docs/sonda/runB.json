@@ -1,0 +1,7 @@
+{
+ "result": "UserPromptSubmit operation blocked by hook:\nSONDA-TG-BLOCK-7731\n\nOriginal prompt: [MAESTRO/sonda/T-1] diga apenas OK",
+ "num_turns": 0,
+ "total_cost_usd": 0,
+ "is_error": false,
+ "subtype": "success"
+}

@@ -1,0 +1,9 @@
+ledger/
+frentes/*/custo.json
+frentes/*/FREIO
+frentes/*/gates/
+frentes/*/patches/
+__pycache__/
+*.pyc
+.log/
+.off
